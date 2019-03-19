@@ -1,0 +1,55 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: m2-cache
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 8Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: quarkus-sync-demo
+spec:
+  selector:
+    app: quarkus-sync-demo
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quarkus-sync-demo
+spec:
+  selector:
+    matchLabels:
+      app: quarkus-sync-demo
+  template:
+    metadata:
+      labels:
+        app: quarkus-sync-demo
+    spec:
+      containers:
+        - name: quarkus-sync-demo
+          image: quay.io/rhdevelopers/quarkus-java-builder
+          imagePullPolicy: IfNotPresent
+          args:
+            - "/usr/local/bin/quarkus-dev.sh"
+          env:
+            - name: MAVEN_MIRROR_URL
+              value: http://192.168.64.1:8081/nexus/content/groups/public
+          ports:
+            - name: http-web
+              containerPort: 8080
+          volumeMounts:
+            - mountPath: /root/.m2
+              name: m2-cache
+      volumes:
+        - name: m2-cache
+          persistentVolumeClaim:
+            claimName: m2-cache

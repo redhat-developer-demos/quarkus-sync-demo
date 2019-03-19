@@ -1,0 +1,106 @@
+= Quarkus Kubernetes Sync
+:experimental:
+:github-repo-uri: https://github.com/redhat-developer-demos/quarkus-sync-demo
+
+A demo to show how sync local https://quarkus.io[Quarkus] sources with pod running in kubernetes and use the `quarkus:dev` mode to hot reload the changes.
+
+== Pre-requiste
+
+This demo uses https://github.com/vapor-ware/ksync[ksync] to synchronize the local sources with remote.
+
+== Running the demo
+
+Clone the demo sources locally and lets call cloned folder as `$PROJECT_HOME`
+
+[source,bash]
+----
+git clone https://github.com/redhat-developer-demos/quarkus-sync-demo.git
+----
+
+[source,bash]
+----
+./start-minikube.sh
+----
+
+In a new terminal start the `ksync watch` to start monitoring changes to local folder.
+
+[source,bash]
+----
+ksync watch &
+----
+
+Open a new terminal and navigate to `$PROJECT_HOME`, 
+
+Deploy the demo application:
+
+[source,bash]
+----
+kubectl apply -f src/main/k8s/app.yaml
+----
+
+The command creates the following resources:
+
+- a kubernetes deployment called **quarkus-sync-demo**
+- a kubernetes service called **quarkus-sync-demo**
+- a persistence volume claim called `m2-cache` to cache the maven artifacts for faster builds
+
+Check the stats of the application:
+
+[source,bash]
+----
+kubectl get pods -w #<1>
+----
+
+<1> A successful start will have **quarkus-sync-demo** in **Running** status
+
+[NOTE]
+====
+* You can terminate the `kubectl get pods -w` using the command kbd:[CTRL+C]
+====
+
+Once in the running status you can watch the log of the application using:
+
+[source,bash]
+----
+kubectl logs -f <quarkus-pod-name>
+----
+
+During the initial run you will not see any Quarkus logs as the local and remote sources have not been synched. Tailing logs of pod will show message like `Waiting to synchronize project sources`
+
+Create a ksync spec that starts the local to remote file synching:
+
+[source,bash]
+----
+ksync create --name='quarkus-sync-demo' --local-read-only
+ --selector=app=quarkus-sync-demo \
+  `pwd` /project
+----
+
+Once you set up you sync spec, you should see the quarkus-sync-demo pod will start to run the Quarkus application in dev mode i.e. `mvn compile quarkus:dev` 
+
+[IMPORTANT]
+====
+By default ksync is bi-directional, in order to avoid synch loop between local and remote, set the `--local-read-only`
+====
+
+You can check the status of the sync via 
+
+[source,bash]
+----
+ksync get
+----
+
+Lets see the sync in action, open a new terminal and navigate to `$PROJECT_HOME`. Run the following command:
+
+[source,bash]
+----
+./poll.sh #<1>
+----
+<1> this will keep calling the kubernetes service once in every 5 seconds 
+
+Without any change you should be seeing response as `hello`
+
+You can now make changes to the sources e.g change `hello` in link:{github-repo-uri}/blob/master/src/main/java/com/redhat/developers/GreetingResource.java[GreetingResource.java] to `namaste`
+
+After few seconds you will see your polling window sending the new response `namaste`
+
