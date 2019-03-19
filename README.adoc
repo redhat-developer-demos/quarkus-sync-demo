@@ -71,8 +71,10 @@ Create a ksync spec that starts the local to remote file synching:
 
 [source,bash]
 ----
-ksync create --name='quarkus-sync-demo' --local-read-only
- --selector=app=quarkus-sync-demo \
+ksync create --name='quarkus-sync-demo' 
+  --local-read-only \#<1>
+  --reload=false \#<2>
+  --selector=app=quarkus-sync-demo \
   `pwd` /project
 ----
 
@@ -80,7 +82,8 @@ Once you set up you sync spec, you should see the quarkus-sync-demo pod will sta
 
 [IMPORTANT]
 ====
-By default ksync is bi-directional, in order to avoid synch loop between local and remote, set the `--local-read-only`
+<1> By default ksync is bi-directional, in order to avoid synch loop between local and remote, set the `--local-read-only`
+<2> Since quarkus:dev mode will automatically recompile and reload, its not required to reload the container
 ====
 
 You can check the status of the sync via 
