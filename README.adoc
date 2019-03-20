@@ -48,7 +48,7 @@ Check the stats of the application:
 
 [source,bash]
 ----
-kubectl get pods -w #<1>
+kubectl get pods -w ##<1>
 ----
 
 <1> A successful start will have **quarkus-sync-demo** in **Running** status
@@ -72,7 +72,7 @@ Create a ksync spec that starts the local to remote file synching:
 [source,bash]
 ----
 ksync create --name='quarkus-sync-demo' 
-  --reload=false \#<1>
+  --reload=false \##<1>
   --selector=app=quarkus-sync-demo \
   `pwd` /project
 ----
@@ -95,7 +95,7 @@ Lets see the sync in action, open a new terminal and navigate to `$PROJECT_HOME`
 
 [source,bash]
 ----
-./poll.sh #<1>
+./poll.sh ##<1>
 ----
 <1> this will keep calling the kubernetes service once in every 5 seconds 
 
