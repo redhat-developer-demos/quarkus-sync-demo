@@ -6,7 +6,7 @@ A demo to show how sync local https://quarkus.io[Quarkus] sources with pod runni
 
 == Pre-requiste
 
-This demo uses https://github.com/vapor-ware/ksync[ksync] to synchronize the local sources with remote.
+The demo uses https://github.com/vapor-ware/ksync[ksync] to synchronize the local sources with remote.
 
 == Running the demo
 
@@ -72,8 +72,7 @@ Create a ksync spec that starts the local to remote file synching:
 [source,bash]
 ----
 ksync create --name='quarkus-sync-demo' 
-  --local-read-only \#<1>
-  --reload=false \#<2>
+  --reload=false \#<1>
   --selector=app=quarkus-sync-demo \
   `pwd` /project
 ----
@@ -82,8 +81,7 @@ Once you set up you sync spec, you should see the quarkus-sync-demo pod will sta
 
 [IMPORTANT]
 ====
-<1> By default ksync is bi-directional, in order to avoid synch loop between local and remote, set the `--local-read-only`
-<2> Since quarkus:dev mode will automatically recompile and reload, its not required to reload the container
+<1> Since quarkus:dev mode will automatically recompile and reload, its not required to reload the container
 ====
 
 You can check the status of the sync via 
@@ -101,9 +99,20 @@ Lets see the sync in action, open a new terminal and navigate to `$PROJECT_HOME`
 ----
 <1> this will keep calling the kubernetes service once in every 5 seconds 
 
-Without any change you should be seeing response as `hello`
+Without any change you should be seeing response as `hello` getting printed every 5 seconds.
 
-You can now make changes to the sources e.g change `hello` in link:{github-repo-uri}/blob/master/src/main/java/com/redhat/developers/GreetingResource.java[GreetingResource.java] to `namaste`
+You can now make changes to the sources e.g change `hello` in link:{github-repo-uri}/blob/master/src/main/java/com/redhat/developers/GreetingResource.java#L14[GreetingResource.java] to `namaste`
 
 After few seconds you will see your polling window sending the new response `namaste`
+
+== Cleanup
+
+[source,bash]
+----
+kubectl delete -f $PROJECT_HOME/src/main/k8s/app.yaml
+ksync delete quarkus-async-demo
+----
+
+Finally stop the ksync watch 
+
 
